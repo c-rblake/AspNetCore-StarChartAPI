@@ -35,24 +35,34 @@ namespace StarChart.Controllers
         }
 
         [HttpGet("{name}")]
-        public IActionResult GetByName(string name)
+        public IActionResult GetByName(string name) // Could be Many..
         {
-            var celestialObject = _context.CelestialObjects.FirstOrDefault(co=> co.Name == name);
+            //var celestialObject = _context.CelestialObjects.FirstOrDefault(co=> co.Name == name);
+            var celestialObjects = _context.CelestialObjects.Where(co=> co.Name == name);
 
-            if (celestialObject == null)
+            if (!celestialObjects.Any())
             {
                 return NotFound();
             }
-
-            celestialObject.Satellites = _context.CelestialObjects.Where(co => co.OrbitedObjectId == celestialObject.Id).ToList();
-
-            return Ok(celestialObject);
+            foreach (var celestialObject in celestialObjects)
+            {
+                celestialObject.Satellites = _context.CelestialObjects.Where(co => co.OrbitedObjectId == celestialObject.Id).ToList();
+            }
+            return Ok(celestialObjects.ToList());
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var celestialObjects = _context.CelestialObjects.Include(co => co.Satellites);
+            //Ef core solution needs new migration var celestialObjects = _context.CelestialObjects.Include(co => co.Satellites);
+            var celestialObjects = _context.CelestialObjects.ToList();
+
+            foreach (var celestialObject in celestialObjects)
+            {
+                celestialObject.Satellites = _context.CelestialObjects.Where(co => co.OrbitedObjectId == celestialObject.Id).ToList();
+            }
+
+
             return Ok(celestialObjects);
         }
 
